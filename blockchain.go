@@ -4,8 +4,6 @@ import (
 	"encoding/binary"
 )
 
-const k = 2
-
 // Blockchain keeps a sequence of Blocks
 type Blockchain struct {
 	blocks []*Block
@@ -21,7 +19,7 @@ type Block struct {
 // AddBlock saves provided data as a block in the blockchain
 func (bc *Blockchain) AddStage(data string, stage_no int) {
 	prevStage := bc.blocks[len(bc.blocks) - k + stage_no]
-	newStage := NewStage(data, prevStage.Digest)
+	newStage := NewStage(data, prevStage.Digest, stage_no)
 	bc.blocks[len(bc.blocks)-1].stages = append(bc.blocks[len(bc.blocks)-1].stages, newStage)
 
 	if stage_no == k-1 {
@@ -29,10 +27,6 @@ func (bc *Blockchain) AddStage(data string, stage_no int) {
 	}
 }
 
-// // NewBlockchain creates a new Blockchain with genesis Block
-// func NewBlockchain() *Blockchain {
-// 	return &Blockchain{[]*Block{NewGenesisBlock()}}
-// }
 
 func (bc *Blockchain) NewBlock(number int) *Block {
 	block := &Block{number, []byte{}, []*Stage{}}
@@ -51,9 +45,9 @@ func NewBlockchain() *Blockchain {
 			prevBlock := bc.blocks[len(bc.blocks) - i]
 			digest = prevBlock.Digest
 		}
-		newStage := NewStage("Genesis Block", digest)
-		block.stages = append(block.stages, newStage)
 		bc.blocks = append(bc.blocks, block)
+		newStage := NewGenesis(bc, "Genesis Block", digest, i)
+		block.stages = append(block.stages, newStage)
 	}	
 	return bc
 }
