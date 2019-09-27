@@ -14,7 +14,7 @@ var (
 )
 
 const targetBits = 20
-const t = 5000
+const t = 10000
 
 // ProofOfWork represents a proof-of-work
 type ProofOfWork struct {

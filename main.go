@@ -5,11 +5,17 @@ import (
 	"time"
 	// "strconv"
 	"gonum.org/v1/plot/plotter"
-	"math/rand"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotutil"
+	"gonum.org/v1/plot/vg"
 )
 
 const k = 5
 const general_blocks = 10
+
+var pts = make(plotter.XYs, 100)
+var count = 0
+var t1 = time.Now()
 
 func pow(bc *Blockchain, stage *Stage, j int, i int) {
 	pow := NewProofOfWork(bc, stage, j, i)
@@ -17,6 +23,11 @@ func pow(bc *Blockchain, stage *Stage, j int, i int) {
 
 	stage.Digest = hash[:]
 	stage.Nonce = nonce
+
+	// t2 := time.Now()
+	pts[j*(i-k) + j].X = time.Now().Sub(t1).Seconds()
+	pts[j*(i-k) + j].Y = float64(j*(i-k) + j)
+	count += 1
 }
 
 func pipelined(bc *Blockchain, j int, i int) {
@@ -57,47 +68,46 @@ func main() {
 
     fmt.Printf("Genesis Blocks Created\n\n")
 
-	// p, err := plot.New()
-	// t1 := time.Now()
-	// pipelined(bc, 0, k)
-	// t2 := time.Now()
-	// fmt.Printf("Pipelined took seconds: %f\n", t2.Sub(t1).Seconds())
-
-	// t3 := time.Now()
+	// t1 = time.Now()
 	// sequential(bc)
+	// pts_seq := pts
+
+	// pts1 := make(plotter.XYs, 100)
+	// pts = pts1
+	// count = 0
+
+	t1 = time.Now()
+	pipelined(bc, 0, k)
+	pts_pipe := pts
+
+	
 	// t4 := time.Now()
 	// fmt.Printf("Sequential took seconds: %f\n", t4.Sub(t3).Seconds())
 
 
-	rnd := rand.New(rand.NewSource(1))
 
 	// randomPoints returns some random x, y points
 	// with some interesting kind of trend.
-	randomPoints := func(n int) plotter.XYs {
-	    pts := make(plotter.XYs, n)
-	    for i := range pts {
-	        if i == 0 {
-	            pts[i].X = rnd.Float64()
-	        } else {
-	            pts[i].X = pts[i-1].X + rnd.Float64()
-	        }
-	        pts[i].Y = pts[i].X + 10*rnd.Float64()
-	    }
-	    return pts
-	}
-
-	n := 15
-	scatterData := randomPoints(n)
-	lineData := randomPoints(n)
-	linePointsData := randomPoints(n)
 
 	p, err := plot.New()
 	if err != nil {
-	    log.Panic(err)
+		panic(err)
 	}
-	p.Title.Text = "Points Example"
-	p.X.Label.Text = "X"
-	p.Y.Label.Text = "Y"
-	p.Add(plotter.NewGrid())
+
+	p.Title.Text = "Time Taken"
+	p.X.Label.Text = "Time Elapsed"
+	p.Y.Label.Text = "Number of Stages"
+
+	err = plotutil.AddScatters(p,
+		"Pipelined", pts_pipe)
+		// "Sequential", pts_seq)
+	if err != nil {
+		panic(err)
+	}
+
+	// Save the plot to a PNG file.
+	if err := p.Save(5*vg.Inch, 5*vg.Inch, "points.png"); err != nil {
+		panic(err)
+	}
 
 }
